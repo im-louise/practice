@@ -6,7 +6,7 @@ CREATE TABLE datatype_demo(
 	age INTEGER,
 	salary NUMERIC(12,2),
 	is_active BOOLEAN DEFAULT TRUE,
-	creaed_at TIMESTAMP DEFAULT NOW(),
+	created_at TIMESTAMP DEFAULT NOW(),
 	-- postgresql 특화 타입
 	tags TEXT[],  -- 배열
 	metadata JSONB,  -- JSONB JSON binary 타입

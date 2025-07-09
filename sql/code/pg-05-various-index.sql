@@ -43,6 +43,8 @@ SELECT * FROM users WHERE age='25';
 SELECT * FROM users WHERE age < 25 OR age > 25;
 
 -- 인덱스는 검색 성능 + / 저장 공간 추가 필요 / 수정 성능 - 
+-- 실제 쿼리 패턴을 분석 -> 인덱스 설계
+-- 성능 측정 -> 실제 데이터
 
 
 
