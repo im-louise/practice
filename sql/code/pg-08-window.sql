@@ -103,13 +103,74 @@ FROM orders
 ORDER BY 각지역호구
 LIMIT 30
 
+-- 7/10 오전 실습
+-- 각 지역에서 총구매액 1위 고객 -> ROW_NUMBER()로 숫자를 매기고, 이 컬럼의 값이 1인 사람
+-- [지역, 고객이름, 총구매액]
+-- CTE
+-- 1. 지역-사람별 "매출 데이터" 생성 [지역, 고객id, 이름, 해당 고객의 총 매출]
+-- 2. "매출데이터" 에 새로운 열(ROW_NUMBER) 추가
+-- 3. 최종 데이터 표시
+
+WITH region_sales AS (
+	SELECT
+		c.region,
+		c.customer_id,
+		c.customer_name,
+		SUM(o.amount) AS 고객별총매출
+	FROM customers c
+	INNER JOIN orders o ON c.customer_id=o.customer_id
+	GROUP BY c.region, c.customer_id, c.customer_name
+),
+ranked_by_region AS(
+	SELECT
+		region AS 지역,
+		customer_name AS 이름,
+		고객별총매출,
+		ROW_NUMBER() OVER(PARTITION BY region ORDER BY 고객별총매출 DESC) AS 지역순위
+	FROM region_sales
+)
+SELECT
+	지역,
+	이름,
+	고객별총매출,
+	지역순위
+FROM ranked_by_region
+WHERE 지역순위 = 1;
 
 
+-- 아래는
+-- AI가 준
+-- 답변
 
+-- 1단계: 지역-고객별 총 구매액 계산
+WITH region_customer_sales AS (
+  SELECT
+    region,
+    customer_id,
+    customer_name,
+    SUM(amount) AS 총구매액
+  FROM orders
+  GROUP BY region, customer_id, customer_name
+),
 
+-- 2단계: 각 지역별로 총구매액 기준으로 순위 매기기
+ranked_sales AS (
+  SELECT
+    region,
+    customer_id,
+    customer_name,
+    총구매액,
+    ROW_NUMBER() OVER (PARTITION BY region ORDER BY 총구매액 DESC) AS 지역내순위
+  FROM region_customer_sales
+)
 
-
-
-
+-- 3단계: 지역 내 1등만 필터링
+SELECT
+  region,
+  customer_name,
+  총구매액
+FROM ranked_sales
+WHERE 지역내순위 = 1
+ORDER BY 총구매액 DESC;
 
 
