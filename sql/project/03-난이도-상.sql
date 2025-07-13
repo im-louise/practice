@@ -2,13 +2,16 @@
 -- 상 난이도
 
 SELECT
-*
-FROM
-JOIN
-WHERE
-GROUP BY
-ORDER BY
-LIMIT;
+	genres.genre_id,
+	genres.name, -- 장르별
+	ROW_NUMBER() OVER (ORDER BY SUM(tracks.track_id) DESC, artists.name ASC) AS 순위,
+	artists.artist_id,
+	artists.name AS 아티스트,
+	SUM(tracks.track_id) AS track_count
+FROM artists, tracks
+JOIN genres ON tracks.genre_id = genres.genre_id
+GROUP BY genres.name, track_id, artists.artist_id, genres.genre_id, genres.name
+LIMIT 3;
 
 -- 1. 월별 매출 및 전월 대비 증감률
 -- 각 연월(YYYY-MM)별 총 매출과, 전월 대비 매출 증감률을 구하세요.
@@ -23,25 +26,37 @@ ORDER BY
 LIMIT;
 
 
-
-
-
 -- 2. 장르별 상위 3개 아티스트 및 트랙 수
 -- 각 장르별로 트랙 수가 가장 많은 상위 3명의 아티스트(artist_id, name, track_count)를 구하세요.
 -- 동점일 경우 아티스트 이름 오름차순 정렬.
+WITH track_count_number AS (
+	SELECT
+		g.genre_id,
+        g.name AS genre_name,
+        a.artist_id,
+        a.name AS artist_name,
+        COUNT(t.track_id) AS track_count
+	FROM tracks t
+	JOIN genres g ON t.genre_id = g.genre_id
+    JOIN albums al ON t.album_id = al.album_id
+    JOIN artists a ON al.artist_id = a.artist_id
+	GROUP BY g.genre_id, g.name, a.artist_id, a.name
+),
+ranked_by_genre AS (
+	SELECT
+		genre_name AS 장르,
+		artist_name AS 아티스트,
+		track_count AS 트랙수,
+		ROW_NUMBER() OVER(PARTITION BY genre_name ORDER BY track_count DESC, artist_name ASC) AS 순위
+	FROM track_count_number
+)
 SELECT
-	artists.artist_id,
-	artists.name,
-	track_count AS 트랙수
-	genres.name AS 장르별
-FROM artists
-JOIN genres ON artists.name
-WHERE
-GROUP BY track_count, genres.name
-ORDER BY 트랙수 DESC, artists.name ASC
-LIMIT 3;
-
-
+	장르,
+	순위,
+	트랙수,
+	아티스트
+FROM ranked_by_genre
+WHERE 순위 <= 3;
 
 
 
